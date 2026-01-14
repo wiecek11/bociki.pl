@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bociki — Sklep Minecraft</title>
+  <meta name="description" content="Bociki — sklep z przedmiotami i usługami Minecraft. Skiny, serwery, pluginy i więcej." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2333cc66'/%3E%3Ctext x='50' y='56' font-size='48' text-anchor='middle' font-family='monospace' fill='white'%3EB%3C/text%3E%3C/svg%3E">
+  <style>
+    :root{--accent:#2ecc71;--accent-2:#16a085;--bg:#0b1020;--card:#0f1724;--muted:#9aa4b2}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#051024 0%, #07122a 100%);color:#e6eef6;min-height:100vh}
+    .wrap{max-width:1100px;margin:32px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700;font-family:monospace}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    nav{display:flex;gap:12px}
+    button.cta{background:var(--accent);border:0;padding:10px 14px;border-radius:10px;color:#032017;font-weight:700;cursor:pointer}
+    main{margin-top:22px}
+
+    .hero{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:center}
+    .hero-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+    .store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:16px}
+
+    .product{background:var(--card);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:10px}
+    .product img{width:100%;height:140px;object-fit:cover;border-radius:8px}
+    .product h3{margin:0;font-size:16px}
+    .price{font-weight:800}
+    .muted{color:var(--muted);font-size:13px}
+
+    .cart{position:sticky;top:20px}
+    .cart .items{max-height:300px;overflow:auto;margin-top:10px;padding-top:8px;display:flex;flex-direction:column;gap:8px}
+    .cart-item{display:flex;gap:8px;align-items:center}
+    .cart-item img{width:48px;height:48px;border-radius:8px;object-fit:cover}
+    .qty{display:flex;align-items:center;gap:6px}
+    .qty button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px;border-radius:6px;color:#e6eef6;cursor:pointer}
+
+    footer{margin-top:32px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:40}
+    .modal.show{display:flex}
+    .modal-card{background:#071122;padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);width:420px;max-width:96%}
+
+    /* responsive */
+    @media (max-width:880px){.hero{grid-template-columns:1fr} .cart{position:relative} .logo{width:44px;height:44px}}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">B</div>
+        <div>
+          <h1>Bociki — Sklep Minecraft</h1>
+          <p class="lead">Skiny, serwery, przedmioty i pomoc przy budowach</p>
+        </div>
+      </div>
+      <nav>
+        <button class="cta" id="open-cart">Koszyk (<span id="cart-count">0</span>)</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-card">
+          <h2>Witaj w Bociki</h2>
+          <p class="muted">Najlepsze zasoby i usługi dla Twojego świata Minecraft — szybka wysyłka i wsparcie 24/7.</p>
+
+          <div class="store-grid" id="products"></div>
+        </div>
+
+        <aside class="cart hero-card cart" id="cart-panel">
+          <h3>Twój koszyk</h3>
+          <div class="items" id="cart-items">
+            <p class="muted">Koszyk jest pusty — dodaj przedmioty.</p>
+          </div>
+          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="muted">Suma:</div>
+              <div style="font-size:18px;font-weight:800" id="cart-total">0.00 zł</div>
+            </div>
+            <div>
+              <button class="cta" id="checkout" disabled>Zamawiam</button>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section style="margin-top:18px">
+        <div class="hero-card">
+          <h3>Jak to działa</h3>
+          <ol class="muted">
+            <li>Wybierz przedmiot i kliknij "Dodaj do koszyka".</li>
+            <li>Sprawdź koszyk i kliknij "Zamawiam" — to tylko demo płatności.</li>
+            <li>Po zamówieniu otrzymasz wiadomość (tu wyświetlana) z numerem zamówienia.</li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      © Bociki — sklep Minecraft • Strona statyczna gotowa do Netlify
+    </footer>
+  </div>
+
+  <!-- modal -->
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <h3 id="modal-title">Podsumowanie zamówienia</h3>
+      <div id="modal-body" class="muted" style="margin-top:8px"></div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+        <button id="modal-close" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;cursor:pointer">Zamknij</button>
+        <button id="modal-confirm" class="cta">Potwierdź</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Przykładowe produkty. Możesz zmienić, dodać obrazy i opisy.
+    const PRODUCTS = [
+      {id: 'skin-1', title: 'Skin: Rycerz Bocik', price: 9.99, description: 'Stylowy skin rycerza.', img: 'https://via.placeholder.com/600x400.png?text=Skin+Rycerz'},
+      {id: 'map-1', title: 'Mapa: Podziemia Bocika', price: 14.99, description: 'Trudna mapa przygodowa.', img: 'https://via.placeholder.com/600x400.png?text=Mapa+Podziemia'},
+      {id: 'plugin-1', title: 'Plugin: EconomyPro', price: 19.99, description: 'Rozbudowane economy dla serwera.', img: 'https://via.placeholder.com/600x400.png?text=Plugin+Economy'},
+      {id: 'build-1', title: 'Usługa: Budowa 10x10', price: 29.99, description: 'Budowa domu 10x10 na zamówienie.', img: 'https://via.placeholder.com/600x400.png?text=Budowa+10x10'},
+      {id: 'token-1', title: 'Tokeny: 500x', price: 4.99, description: 'Szybki zasób tokenów.', img: 'https://via.placeholder.com/600x400.png?text=500+Tokenów'}
+    ];
+
+    // Prosty stan koszyka
+    let cart = JSON.parse(localStorage.getItem('bociki-cart') || '{}');
+
+    function saveCart(){ localStorage.setItem('bociki-cart', JSON.stringify(cart)); renderCart(); }
+
+    function renderProducts(){
+      const el = document.getElementById('products');
+      el.innerHTML = '';
+      PRODUCTS.forEach(p => {
+        const card = document.createElement('div'); card.className = 'product';
+        card.innerHTML = `
+          <img src="${p.img}" alt="${p.title}">
+          <h3>${p.title}</h3>
+          <div class="muted">${p.description}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <div class="price">${p.price.toFixed(2)} zł</div>
+            <div><button data-id="${p.id}" class="add">Dodaj do koszyka</button></div>
+          </div>
+        `;
+        el.appendChild(card);
+      });
+
+      // add listeners
+      document.querySelectorAll('.add').forEach(btn => btn.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.id; addToCart(id);
+      }));
+    }
+
+    function addToCart(id){
+      cart[id] = (cart[id] || 0) + 1; saveCart();
+      flashMessage('Dodano do koszyka');
+    }
+
+    function removeFromCart(id){ delete cart[id]; saveCart(); }
+
+    function changeQty(id, delta){ if(!cart[id]) return; cart[id] = Math.max(0, cart[id] + delta); if(cart[id] === 0) delete cart[id]; saveCart(); }
+
+    function renderCart(){
+      const container = document.getElementById('cart-items');
+      container.innerHTML = '';
+      const keys = Object.keys(cart);
+      if(keys.length === 0){ container.innerHTML = '<p class="muted">Koszyk jest pusty — dodaj przedmioty.</p>'; document.getElementById('checkout').disabled = true; }
+      else {
+        keys.forEach(id => {
+          const product = PRODUCTS.find(p => p.id === id);
+          const qty = cart[id];
+          const item = document.createElement('div'); item.className = 'cart-item';
+          item.innerHTML = `
+            <img src="${product.img}" alt="${product.title}">
+            <div style="flex:1">
+              <div style="font-weight:700">${product.title}</div>
+              <div class="muted">${product.price.toFixed(2)} zł • ${qty} szt.</div>
+            </div>
+            <div class="qty">
+              <button data-id="${id}" class="dec">-</button>
+              <div style="min-width:18px;text-align:center">${qty}</div>
+              <button data-id="${id}" class="inc">+</button>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+        document.getElementById('checkout').disabled = false;
+      }
+
+      // cart count and total
+      const count = Object.values(cart).reduce((s,n)=>s+n,0); document.getElementById('cart-count').innerText = count;
+      const total = Object.keys(cart).reduce((s,id)=> s + (PRODUCTS.find(p=>p.id===id).price * cart[id] || 0), 0);
+      document.getElementById('cart-total').innerText = total.toFixed(2) + ' zł';
+
+      // attach inc/dec
+      document.querySelectorAll('.inc').forEach(b=>b.addEventListener('click',e=>{ changeQty(e.currentTarget.dataset.id,1)}));
+      document.querySelectorAll('.dec').forEach(b=>b.addEventListener('click',e=>{ changeQty(e.currentTarget.dataset.id,-1)}));
+    }
+
+    function flashMessage(txt){
+      const div = document.createElement('div'); div.textContent = txt; div.style.position='fixed';div.style.right='18px';div.style.bottom='18px';div.style.padding='10px 14px';div.style.background='rgba(0,0,0,0.6)';div.style.border='1px solid rgba(255,255,255,0.04)';div.style.borderRadius='10px';document.body.appendChild(div);
+      setTimeout(()=>{div.style.transition='200ms';div.style.opacity=0;setTimeout(()=>div.remove(),220)},1200);
+    }
+
+    // checkout flow (demo)
+    document.getElementById('checkout').addEventListener('click', ()=>{
+      const keys = Object.keys(cart);
+      if(keys.length===0) return;
+      const lines = keys.map(id=>{
+        const p = PRODUCTS.find(x=>x.id===id);
+        return `${p.title} x${cart[id]} — ${(p.price*cart[id]).toFixed(2)} zł`;
+      }).join('\n');
+      document.getElementById('modal-body').innerText = `Zamówienie:\n\n${lines}\n\nSuma: ${Object.keys(cart).reduce((s,id)=> s + (PRODUCTS.find(p=>p.id===id).price * cart[id] || 0), 0).toFixed(2)} zł`;
+      document.getElementById('modal').classList.add('show');
+    });
+
+    document.getElementById('open-cart').addEventListener('click', ()=>{
+      const panel = document.getElementById('cart-panel'); panel.scrollIntoView({behavior:'smooth',block:'center'});
+      flashMessage('Otworzono koszyk');
+    });
+
+    document.getElementById('modal-close').addEventListener('click', ()=>document.getElementById('modal').classList.remove('show'));
+    document.getElementById('modal-confirm').addEventListener('click', ()=>{
+      const orderId = 'BOC-'+Math.random().toString(36).slice(2,9).toUpperCase();
+      document.getElementById('modal-title').innerText = 'Dziękujemy za zamówienie!';
+      document.getElementById('modal-body').innerText = `Twoje zamówienie zostało przyjęte. Numer: ${orderId}.\nW tym demo nie realizujemy prawdziwych płatności.`;
+      cart = {}; saveCart();
+    });
+
+    // Inicjalizacja
+    renderProducts(); renderCart();
+
+    // Pro tip: jeśli chcesz dodać prawdziwe obrazki, wrzuć folder "assets" obok index.html i zmień url-e w PRODUCTS.
+  </script>
+</body>
+</html>
